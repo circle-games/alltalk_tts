@@ -301,8 +301,15 @@ def signal_handler(sig, frame):
 
 # Attach the signal handler to the SIGINT signal (Ctrl+C)
 signal.signal(signal.SIGINT, signal_handler)
+
+try:
+    import google.colab
+except ImportError:
+    pass
+
+
 # Check if we're running in docker
-if os.path.isfile("/.dockerenv"):
+if os.path.isfile("/.dockerenv") and 'google.colab' not in sys.modules:
     print(
         f"[{params['branding']}Startup] \033[94mRunning in Docker. Please wait.\033[0m"
     )
