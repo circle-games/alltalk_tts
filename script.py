@@ -19,6 +19,8 @@ import uuid
 import logging
 # Store the current disable level
 current_disable_level = logging.getLogger().manager.disable
+# Set a standard False state for Google Colab
+running_on_google_colab = False
 
 ######################################
 #### ALLTALK ALLOWED STARTUP TIME ####
@@ -302,11 +304,28 @@ def signal_handler(sig, frame):
 # Attach the signal handler to the SIGINT signal (Ctrl+C)
 signal.signal(signal.SIGINT, signal_handler)
 
+
+################################
+#### Google Colab Detection ####
+################################
+tunnel_url = None
 try:
     import google.colab
+    running_on_google_colab = True
+    #if deepspeed_installed:
+        #params["deepspeed_activate"] = True
+    with open('/content/alltalk_tts/googlecolab.json', 'r') as f:
+        data = json.load(f)
+        google_ip_address = data.get('google_ip_address', tunnel_url)
+except FileNotFoundError:
+    print("Could not find IP address")
+    google_ip_address = tunnel_url
 except ImportError:
     pass
 
+##############################
+#### Start the subprocess ####
+##############################
 
 # Check if we're running in docker
 if os.path.isfile("/.dockerenv") and 'google.colab' not in sys.modules:
@@ -325,6 +344,12 @@ else:
             f"\033[92mhttp://{params['ip_address']}:{params['port_number']}\033[00m",
         )
         print(f"[{params['branding']}Startup]")
+        if running_on_google_colab:
+            print(
+                f"[{params['branding']}Startup] \033[94m{params['branding']}Google Colab Address:\033[00m",
+                f"\033[92m{google_ip_address}\033[00m",
+            )
+            print(f"[{params['branding']}Startup]")
     else:
         print(f"[{params['branding']}Startup] \033[91mWarning\033[0m TTS Subprocess Webserver failing to start process")
         print(f"[{params['branding']}Startup] \033[91mWarning\033[0m It could be that you have something on port:",params["port_number"],)

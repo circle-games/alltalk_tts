@@ -128,6 +128,23 @@ async def startup_shutdown(no_actual_value_it_demanded_something_be_here):
     yield
     # Shutdown logic
 
+################################
+#### Google Colab Detection ####
+################################
+tunnel_url = None
+try:
+    import google.colab
+    running_on_google_colab = True
+    #if deepspeed_available:
+        #params["deepspeed_activate"] = True
+    with open('/content/alltalk_tts/googlecolab.json', 'r') as f:
+        data = json.load(f)
+        google_ip_address = data.get('google_ip_address', tunnel_url)
+except FileNotFoundError:
+    print("Could not find IP address")
+    google_ip_address = tunnel_url
+except ImportError:
+    pass
 
 # Create FastAPI app with lifespan
 app = FastAPI(lifespan=startup_shutdown)
@@ -804,7 +821,10 @@ async def preview_voice(request: Request, voice: str = Form(...)):
         await generate_audio(text, voice, language, temperature, repetition_penalty, output_file_path, streaming=False)
 
         # Generate the URL
-        output_file_url = f'http://{params["ip_address"]}:{params["port_number"]}/audio/{output_file_name}.wav'
+        if running_on_google_colab:
+            output_file_url = f'{google_ip_address}/audio/{output_file_name}.wav'
+        else:
+            output_file_url = f'http://{params["ip_address"]}:{params["port_number"]}/audio/{output_file_name}.wav'
 
         # Return the response with both local file path and URL
         return JSONResponse(
@@ -963,9 +983,10 @@ def standard_filtering(text_input):
                         )
     return text_output
 
-def combine(output_file_timestamp, output_file_name, audio_files):
+def combine(output_file_timestamp, output_file_name, audio_files, base_url):
     audio = np.array([])
     sample_rate = None
+    base_url
     try:
         for audio_file in audio_files:
             audio_data, current_sample_rate = sf.read(audio_file)
@@ -982,12 +1003,12 @@ def combine(output_file_timestamp, output_file_name, audio_files):
     if output_file_timestamp:
         timestamp = int(time.time())
         output_file_path = os.path.join(this_dir / "outputs" / f'{output_file_name}_{timestamp}_combined.wav')
-        output_file_url = f'http://{params["ip_address"]}:{params["port_number"]}/audio/{output_file_name}_{timestamp}_combined.wav'
-        output_cache_url = f'http://{params["ip_address"]}:{params["port_number"]}/audiocache/{output_file_name}_{timestamp}_combined.wav'
+        output_file_url = f'{base_url}/audio/{output_file_name}_{timestamp}_combined.wav'
+        output_cache_url = f'{base_url}/audiocache/{output_file_name}_{timestamp}_combined.wav'
     else:
         output_file_path = os.path.join(this_dir / "outputs" / f'{output_file_name}_combined.wav')
-        output_file_url = f'http://{params["ip_address"]}:{params["port_number"]}/audio/{output_file_name}_combined.wav'
-        output_cache_url = f'http://{params["ip_address"]}:{params["port_number"]}/audiocache/{output_file_name}_combined.wav'
+        output_file_url = f'{base_url}/audio/{output_file_name}_combined.wav'
+        output_cache_url = f'{base_url}/audiocache/{output_file_name}_combined.wav'
     try:
         sf.write(output_file_path, audio, samplerate=sample_rate)
         # Clean up unnecessary files
@@ -997,6 +1018,9 @@ def combine(output_file_timestamp, output_file_name, audio_files):
         # Handle exceptions (e.g., failed to write output file)
         return None, None
     return output_file_path, output_file_url, output_cache_url
+
+from urllib.parse import SplitResult
+from pprint import pprint
 
 # Generation API (separate from text-generation-webui)
 @app.post("/api/tts-generate", response_class=JSONResponse)
@@ -1076,13 +1100,23 @@ async def tts_generate(
                 hashed_uuid = hash_object.hexdigest()
                 # Truncate to the desired length, for example, 16 characters
                 short_uuid = hashed_uuid[:5]
-                output_file_path = this_dir / "outputs" / f"{output_file_name}_{timestamp}{short_uuid}.wav"
-                output_file_url = f'http://{params["ip_address"]}:{params["port_number"]}/audio/{output_file_name}_{timestamp}{short_uuid}.wav'
-                output_cache_url = f'http://{params["ip_address"]}:{params["port_number"]}/audiocache/{output_file_name}_{timestamp}{short_uuid}.wav'
+                if running_on_google_colab:
+                    output_file_path = this_dir / "outputs" / f"{output_file_name}_{timestamp}{short_uuid}.wav"
+                    output_file_url = f'{google_ip_address}/audio/{output_file_name}_{timestamp}{short_uuid}.wav'
+                    output_cache_url = f'{google_ip_address}/audiocache/{output_file_name}_{timestamp}{short_uuid}.wav'
+                else:
+                    output_file_path = this_dir / "outputs" / f"{output_file_name}_{timestamp}{short_uuid}.wav"
+                    output_file_url = f'http://{params["ip_address"]}:{params["port_number"]}/audio/{output_file_name}_{timestamp}{short_uuid}.wav'
+                    output_cache_url = f'http://{params["ip_address"]}:{params["port_number"]}/audiocache/{output_file_name}_{timestamp}{short_uuid}.wav'
             else:
-                output_file_path = this_dir / "outputs" / f"{output_file_name}.wav"
-                output_file_url = f'http://{params["ip_address"]}:{params["port_number"]}/audio/{output_file_name}.wav'
-                output_cache_url = f'http://{params["ip_address"]}:{params["port_number"]}/audiocache/{output_file_name}.wav'
+                if running_on_google_colab:
+                    output_file_path = this_dir / "outputs" / f"{output_file_name}.wav"
+                    output_file_url = f'{google_ip_address}/audio/{output_file_name}.wav'
+                    output_cache_url = f'{google_ip_address}/audiocache/{output_file_name}.wav'
+                else:
+                    output_file_path = this_dir / "outputs" / f"{output_file_name}.wav"
+                    output_file_url = f'http://{params["ip_address"]}:{params["port_number"]}/audio/{output_file_name}.wav'
+                    output_cache_url = f'http://{params["ip_address"]}:{params["port_number"]}/audiocache/{output_file_name}.wav'
             if text_filtering == "html":
                 cleaned_string = html.unescape(standard_filtering(text_input))
                 cleaned_string = re.sub(r'([!?.])\1+', r'\1', text_input)
