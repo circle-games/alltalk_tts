@@ -208,13 +208,42 @@
             /* Adjust padding as needed for the nested table */
         }
     </style>
+    <script>
+        // Function to set TTS Generator link and iframe source based on the current location
+        function setPageContent() {
+            var currentLocation = window.location.href;
+
+            // Remove any trailing slashes from the current URL
+            if (currentLocation.endsWith('/')) {
+                currentLocation = currentLocation.slice(0, -1);
+            }
+
+            // Construct the URL for the AllTalk TTS Generator
+            var ttsGeneratorUrl = currentLocation + '/static/tts_generator/tts_generator.html';
+            console.log('TTS Generator URL:', ttsGeneratorUrl);
+
+            // Set the href attribute of the link to the constructed URL
+            document.getElementById('ttsGeneratorLink').href = ttsGeneratorUrl;
+
+            // Construct the iframe source URL
+            var iframeSrc = currentLocation + '/settings';
+            console.log('Iframe source URL:', iframeSrc);
+
+            // Set the iframe source to the constructed URL
+            document.getElementById('settingsFrame').src = iframeSrc;
+        }
+
+        // Call the function when the page is loaded
+        window.onload = setPageContent;
+    </script>
+
 </head>
 
 <body>
     <h1 id="toc">AllTalk TTS</h1>
-    <iframe src="http://{{ params.ip_address }}:{{ params.port_number }}/settings" width="100%" height="535"
-        frameborder="0" style="margin: 0; padding: 0;"></iframe>
+    <iframe id="settingsFrame" width="100%" height="535" frameborder="0" style="margin: 0; padding: 0;"></iframe>
     <hr>
+
     <div style="display: flex; justify-content: flex-start; align-items: flex-start;">
         <div style="flex: 1; padding-right: 20px;">
             <h3 id="index">Page Index</h3>
@@ -240,14 +269,15 @@
             <h3>Links</h3>
 
             <ul>
-                <li><a href="http://{{ params.ip_address }}:{{ params.port_number }}/static/tts_generator/tts_generator.html"
-                        target="_blank" rel="noopener">AllTalk TTS Generator</a></li>
+                <li><a id="ttsGeneratorLink" href="#" target="_blank" rel="noopener">AllTalk TTS Generator</a></li>
+
+
                 <li><a href="https://github.com/erew123/alltalk_tts" target="_blank" rel="noopener">AllTalk Github</a>
                 </li>
                 <li><a href="https://github.com/erew123/alltalk_tts/issues/25" target="_blank" rel="noopener">AllTalk
                         Changelog</a></li>
                 <li><a href="https://github.com/erew123/alltalk_tts/issues/74" target="_blank" rel="noopener">AllTalk
-                            Existing Feature Requests</a></li>
+                        Existing Feature Requests</a></li>
                 <li><a href="https://github.com/erew123/alltalk_tts?#-help-with-problems" target="_blank"
                         rel="noopener">AllTalk
                         Help</a></li>
@@ -341,9 +371,20 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const ipAddress = "{{ params.ip_address }}";
-            const portNumber = "{{ params.port_number }}";
-            const url = `http://${ipAddress}:${portNumber}/api/voices`;
+            // Function to dynamically construct the URL for fetching voices based on the current location
+            function getVoicesUrl() {
+                var currentLocation = window.location.href;
+
+                // Remove any trailing slashes from the current URL
+                if (currentLocation.endsWith('/')) {
+                    currentLocation = currentLocation.slice(0, -1);
+                }
+
+                // Construct the URL for fetching voices
+                return `${currentLocation}/api/voices`;
+            }
+
+            const url = getVoicesUrl();
 
             fetch(url)
                 .then(response => response.json())
@@ -395,56 +436,70 @@
                 outputFileContainer.style.display = 'flex';
             }
         });
-        // Form submit
-        const form = document.getElementById('ttsForm');
-        const ipAddress = "{{ params.ip_address }}";
-        const portNumber = "{{ params.port_number }}";
-        const baseurl = `http://${ipAddress}:${portNumber}`;
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
 
-            enableLoader(true);
-            audioPlayer.pause();
+        document.addEventListener('DOMContentLoaded', function () {
+            // Function to dynamically construct the base URL based on the current location
+            function getBaseUrl() {
+                var currentLocation = window.location.href;
 
-            const formData = new FormData(form);
+                // Remove any trailing slashes from the current URL
+                if (currentLocation.endsWith('/')) {
+                    currentLocation = currentLocation.slice(0, -1);
+                }
 
-            // Get and clean the text input from the textarea
-            let textInput = formData.get('text');
-            let cleanedText = textInput.replace(/ \- | \– /g, ' '); // Replace hyphens
-            cleanedText = cleanedText.replace(/%/g, " percent");
-            //cleanedText = cleanedText.replace(/([!?.])\1+/g, '$1');
-            //cleanedText = cleanedText.replace(/[^a-zA-Z0-9\s\.,;:!?\-\'"À-ÿ\u0400-\u04FF]/g, '');
-            cleanedText = cleanedText.replace(/[^a-zA-Z0-9\s\.,;:!?\-\'"À-ÿ\u0400-\u04FF]\$/g, '')
-            cleanedText = cleanedText.replace(/\n+/g, ' ');
-            cleanedText = cleanedText.replace(/\.\s'/g, ".'"); // Remove space between period and single quote
-            //cleanedText = cleanedText.replace(/'/g, ""); // Remove all single quotes
-
-            // Set the cleaned text back to the form data
-            formData.set('text', cleanedText);
-
-            // Rest of your form submission code...
-            // Check if streaming or not and handle accordingly
-            if (formData.get('streaming') === 'true') {
-                // For streaming, update the audio player src
-                const searchParams = new URLSearchParams(formData).toString();
-                audioPlayer.src = baseurl + "/api/tts-generate-streaming?" + searchParams;
-                audioPlayer.load(); // Reload the audio player
-            } else {
-                // For non-streaming, send a POST request
-                const response = await fetch('/api/tts-generate-streaming', {
-                    method: 'POST',
-                    body: formData,
-                    cache: "no-store"
-                });
-
-                // Process the response
-                const result = await response.json();
-                // Update output file path and audio player source
-                const outputFilePath = document.getElementById('outputFilePath');
-                outputFilePath.textContent = result.output_file_path;
-                audioPlayer.src = baseurl + `/audio/${result.output_file_path}`;
-                audioPlayer.load(); // Reload the audio player
+                return currentLocation;
             }
+
+            // Construct the base URL
+            const baseurl = getBaseUrl();
+
+            // Form submit event listener
+            const form = document.getElementById('ttsForm');
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                enableLoader(true);
+                audioPlayer.pause();
+
+                const formData = new FormData(form);
+
+                // Get and clean the text input from the textarea
+                let textInput = formData.get('text');
+                let cleanedText = textInput.replace(/ \- | \– /g, ' '); // Replace hyphens
+                cleanedText = cleanedText.replace(/%/g, " percent");
+                //cleanedText = cleanedText.replace(/([!?.])\1+/g, '$1');
+                //cleanedText = cleanedText.replace(/[^a-zA-Z0-9\s\.,;:!?\-\'"À-ÿ\u0400-\u04FF]/g, '');
+                cleanedText = cleanedText.replace(/[^a-zA-Z0-9\s\.,;:!?\-\'"À-ÿ\u0400-\u04FF]\$/g, '')
+                cleanedText = cleanedText.replace(/\n+/g, ' ');
+                cleanedText = cleanedText.replace(/\.\s'/g, ".'"); // Remove space between period and single quote
+                //cleanedText = cleanedText.replace(/'/g, ""); // Remove all single quotes
+
+                // Set the cleaned text back to the form data
+                formData.set('text', cleanedText);
+
+                // Check if streaming or not and handle accordingly
+                if (formData.get('streaming') === 'true') {
+                    // For streaming, update the audio player src
+                    const searchParams = new URLSearchParams(formData).toString();
+                    audioPlayer.src = baseurl + "/api/tts-generate-streaming?" + searchParams;
+                    audioPlayer.load(); // Reload the audio player
+                } else {
+                    // For non-streaming, send a POST request
+                    const response = await fetch(baseurl + '/api/tts-generate-streaming', {
+                        method: 'POST',
+                        body: formData,
+                        cache: "no-store"
+                    });
+
+                    // Process the response
+                    const result = await response.json();
+                    // Update output file path and audio player source
+                    const outputFilePath = document.getElementById('outputFilePath');
+                    outputFilePath.textContent = result.output_file_path;
+                    audioPlayer.src = baseurl + `/audio/${result.output_file_path}`;
+                    audioPlayer.load(); // Reload the audio player
+                }
+            });
         });
 
     </script>
@@ -1357,7 +1412,8 @@
     <h3 id="🟨-help-with-problems">🟨 Help with problems</h3>
     <h4 id="🔄-minor-updatesbug-fixes-list-can-be-found-here">&nbsp;&nbsp;&nbsp;&nbsp; 🔄 <strong>Minor updates/bug
             fixes list</strong> can be found <a href="https://github.com/erew123/alltalk_tts/issues/25">here</a></h4>
-    <h4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Please check Github for the most up to date help list <a href="https://github.com/erew123/alltalk_tts#-help-with-problems">here</a></h4>
+    <h4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Please check Github for the most up to date help list <a
+            href="https://github.com/erew123/alltalk_tts#-help-with-problems">here</a></h4>
     <details>
         <summary>🟨 How to make a diagnostics report file</summary>
 
@@ -1483,7 +1539,8 @@
         <h4 id="how-do-i-know-if-i-am-in-a-python-environment">How do I know if I am in a Python environment?:</h4>
         <p>When a Python environment starts up, it changes the command prompt to show the Python environment that it
             currently running within that terminal/console. </p>
-        <div style="text-align: center;"><img src="/static/at_admin/pythonenvironment.jpg" alt="Python Environment" /></div><br>
+        <div style="text-align: center;"><img src="/static/at_admin/pythonenvironment.jpg" alt="Python Environment" />
+        </div><br>
     </details>
 
     <details>
@@ -2053,7 +2110,8 @@
                     </ul>
                 </li>
                 <li><strong>Linux</strong> users only need to run this command:<ul>
-                        <li><code> export LD_LIBRARY_PATH=`python3 -c 'import os; import nvidia.cublas.lib; import nvidia.cudnn.lib; print(os.path.dirname(nvidia.cublas.lib.__file__) + ":" + os.path.dirname(nvidia.cudnn.lib.__file__))'`</code></li>
+                        <li><code> export LD_LIBRARY_PATH=`python3 -c 'import os; import nvidia.cublas.lib; import nvidia.cudnn.lib; print(os.path.dirname(nvidia.cublas.lib.__file__) + ":" + os.path.dirname(nvidia.cudnn.lib.__file__))'`</code>
+                        </li>
                     </ul>
                 </li>
                 <li>Start the fine-tuning process with the command:<ul>
