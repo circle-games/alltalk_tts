@@ -984,6 +984,7 @@ def standard_filtering(text_input):
     return text_output
 
 def combine(output_file_timestamp, output_file_name, audio_files, base_url):
+    print("reached combine")
     audio = np.array([])
     sample_rate = None
     base_url
@@ -1000,27 +1001,39 @@ def combine(output_file_timestamp, output_file_name, audio_files, base_url):
     except Exception as e:
         # Handle exceptions (e.g., file not found, invalid audio format)
         return None, None
+    print("reached if statement")
     if output_file_timestamp:
         timestamp = int(time.time())
-        output_file_path = os.path.join(this_dir / "outputs" / f'{output_file_name}_{timestamp}_combined.wav')
-        output_file_url = f'{base_url}/audio/{output_file_name}_{timestamp}_combined.wav'
-        output_cache_url = f'{base_url}/audiocache/{output_file_name}_{timestamp}_combined.wav'
+        if running_on_google_colab:
+            output_file_path = os.path.join(this_dir / "outputs" / f'{output_file_name}_{timestamp}_combined.wav')
+            output_file_url = f'{google_ip_address}/audio/{output_file_name}_{timestamp}_combined.wav'
+            output_cache_url = f'{google_ip_address}/audiocache/{output_file_name}_{timestamp}_combined.wav'        
+        else:
+            output_file_path = os.path.join(this_dir / "outputs" / f'{output_file_name}_{timestamp}_combined.wav')
+            output_file_url = f'{base_url}/audio/{output_file_name}_{timestamp}_combined.wav'
+            output_cache_url = f'{base_url}/audiocache/{output_file_name}_{timestamp}_combined.wav'
     else:
-        output_file_path = os.path.join(this_dir / "outputs" / f'{output_file_name}_combined.wav')
-        output_file_url = f'{base_url}/audio/{output_file_name}_combined.wav'
-        output_cache_url = f'{base_url}/audiocache/{output_file_name}_combined.wav'
+        if running_on_google_colab:
+            output_file_path = os.path.join(this_dir / "outputs" / f'{output_file_name}_combined.wav')
+            output_file_url = f'{google_ip_address}/audio/{output_file_name}_combined.wav'
+            output_cache_url = f'{google_ip_address}/audiocache/{output_file_name}_combined.wav'
+        else:    
+            output_file_path = os.path.join(this_dir / "outputs" / f'{output_file_name}_combined.wav')
+            output_file_url = f'{base_url}/audio/{output_file_name}_combined.wav'
+            output_cache_url = f'{base_url}/audiocache/{output_file_name}_combined.wav'
+    print(output_file_path)
+    print(output_file_url)
+    print(output_cache_url)
     try:
         sf.write(output_file_path, audio, samplerate=sample_rate)
         # Clean up unnecessary files
         for audio_file in audio_files:
             os.remove(audio_file)
+        print("reached here")
     except Exception as e:
         # Handle exceptions (e.g., failed to write output file)
         return None, None
     return output_file_path, output_file_url, output_cache_url
-
-from urllib.parse import SplitResult
-from pprint import pprint
 
 # Generation API (separate from text-generation-webui)
 @app.post("/api/tts-generate", response_class=JSONResponse)
