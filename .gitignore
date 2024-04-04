@@ -3,7 +3,5 @@ models/*.*
 outputs/*.*
 finetune/*.*
 system/config/at_github_sha.json
-config.json
 confignew.json
-models.json
 diagnostics.log
