@@ -804,7 +804,7 @@ async def preview_voice(request: Request, voice: str = Form(...)):
         await generate_audio(text, voice, language, temperature, repetition_penalty, output_file_path, streaming=False)
 
         # Generate the URL
-        output_file_url = f'http://{params["ip_address"]}:{params["port_number"]}/audio/{output_file_name}.wav'
+        output_file_url = f'/audio/{output_file_name}.wav'
 
         # Return the response with both local file path and URL
         return JSONResponse(
@@ -982,12 +982,12 @@ def combine(output_file_timestamp, output_file_name, audio_files):
     if output_file_timestamp:
         timestamp = int(time.time())
         output_file_path = os.path.join(this_dir / "outputs" / f'{output_file_name}_{timestamp}_combined.wav')
-        output_file_url = f'http://{params["ip_address"]}:{params["port_number"]}/audio/{output_file_name}_{timestamp}_combined.wav'
-        output_cache_url = f'http://{params["ip_address"]}:{params["port_number"]}/audiocache/{output_file_name}_{timestamp}_combined.wav'
+        output_file_url = f'/audio/{output_file_name}_{timestamp}_combined.wav'
+        output_cache_url = f'/audiocache/{output_file_name}_{timestamp}_combined.wav'
     else:
         output_file_path = os.path.join(this_dir / "outputs" / f'{output_file_name}_combined.wav')
-        output_file_url = f'http://{params["ip_address"]}:{params["port_number"]}/audio/{output_file_name}_combined.wav'
-        output_cache_url = f'http://{params["ip_address"]}:{params["port_number"]}/audiocache/{output_file_name}_combined.wav'
+        output_file_url = f'/audio/{output_file_name}_combined.wav'
+        output_cache_url = f'/audiocache/{output_file_name}_combined.wav'
     try:
         sf.write(output_file_path, audio, samplerate=sample_rate)
         # Clean up unnecessary files
@@ -1077,12 +1077,12 @@ async def tts_generate(
                 # Truncate to the desired length, for example, 16 characters
                 short_uuid = hashed_uuid[:5]
                 output_file_path = this_dir / "outputs" / f"{output_file_name}_{timestamp}{short_uuid}.wav"
-                output_file_url = f'http://{params["ip_address"]}:{params["port_number"]}/audio/{output_file_name}_{timestamp}{short_uuid}.wav'
-                output_cache_url = f'http://{params["ip_address"]}:{params["port_number"]}/audiocache/{output_file_name}_{timestamp}{short_uuid}.wav'
+                output_file_url = f'/audio/{output_file_name}_{timestamp}{short_uuid}.wav'
+                output_cache_url = f'/audiocache/{output_file_name}_{timestamp}{short_uuid}.wav'
             else:
                 output_file_path = this_dir / "outputs" / f"{output_file_name}.wav"
-                output_file_url = f'http://{params["ip_address"]}:{params["port_number"]}/audio/{output_file_name}.wav'
-                output_cache_url = f'http://{params["ip_address"]}:{params["port_number"]}/audiocache/{output_file_name}.wav'
+                output_file_url = f'/audio/{output_file_name}.wav'
+                output_cache_url = f'/audiocache/{output_file_name}.wav'
             if text_filtering == "html":
                 cleaned_string = html.unescape(standard_filtering(text_input))
                 cleaned_string = re.sub(r'([!?.])\1+', r'\1', text_input)
@@ -1238,10 +1238,9 @@ async def read_root():
     return HTMLResponse(content=rendered_html, status_code=200)
 
 # Start Uvicorn Webserver
-host_parameter = params["ip_address"]
 port_parameter = int(params["port_number"])
 
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host=host_parameter, port=port_parameter, log_level="warning")
+    uvicorn.run(app, host="0.0.0.0", port=port_parameter, log_level="warning")
