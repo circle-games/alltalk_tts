@@ -333,7 +333,7 @@ else:
         print(f"[{params['branding']}Startup] \033[94m{params['branding']}Settings & Documentation:\033[00m",f"\033[92mhttp://localhost:{params['port_number']}\033[00m")
         print(f"[{params['branding']}Startup]")
         if running_on_google_colab:
-            print(f"[{params['branding']}Startup] \033[94m{params['branding']}Google Colab Address:\033[00m",f"\033[92m{google_ip_address}\033[00m")
+            print(f"[{params['branding']}Startup] \033[94m{params['branding']}Google Colab Address:\033[00m",f"\033[92m{google_ip_address}:443\033[00m")
             print(f"[{params['branding']}Startup]")
     else:
         print(f"[{params['branding']}Startup] \033[91mWarning\033[0m TTS Subprocess Webserver failing to start process")
