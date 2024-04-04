@@ -673,7 +673,6 @@ async def update_settings(
     autoplay: bool = Form(...),
     deepspeed_activate: bool = Form(...),
     delete_output_wavs: str = Form(...),
-    ip_address: str = Form(...),
     language: str = Form(...),
     local_temperature: str = Form(...),
     local_repetition_penalty: str = Form(...),
@@ -695,7 +694,6 @@ async def update_settings(
     data["autoplay"] = autoplay
     data["deepspeed_activate"] = deepspeed_activate
     data["delete_output_wavs"] = delete_output_wavs
-    data["ip_address"] = ip_address
     data["language"] = language
     data["local_temperature"] = local_temperature
     data["local_repetition_penalty"] = local_repetition_penalty
