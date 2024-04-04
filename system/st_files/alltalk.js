@@ -695,7 +695,7 @@ class AllTalkTtsProvider {
             const data = await response.json();
             if (data.output_file_url) {
                 // Use an audio element to play the .wav file
-                const audioElement = new Audio(data.output_file_url);
+                const audioElement = new Audio(`${this.settings.provider_endpoint}${data.output_file_url}`);
                 audioElement.play().catch(e => console.error("Error playing audio:", e));
             } else {
                 console.warn("[previewTtsVoice] No output file URL received in the response");
@@ -798,7 +798,8 @@ class AllTalkTtsProvider {
                 throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
             const data = await response.json();
-            const outputUrl = data.output_file_url;
+            //const outputUrl = data.output_file_url;
+            const outputUrl = `${this.settings.provider_endpoint}${data.output_file_url}`;
             return outputUrl; // Return only the output_file_url
         } catch (error) {
             console.error("[fetchTtsGeneration] Exception caught:", error);
