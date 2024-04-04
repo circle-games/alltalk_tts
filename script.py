@@ -298,6 +298,23 @@ def signal_handler(sig, frame):
         process.wait()  # Wait for the subprocess to finish
     sys.exit(0)
 
+################################
+#### Google Colab Detection ####
+################################
+tunnel_url = None
+try:
+    import google.colab
+    running_on_google_colab = True
+    #if deepspeed_installed:
+        #params["deepspeed_activate"] = True
+    with open('/content/alltalk_tts/googlecolab.json', 'r') as f:
+        data = json.load(f)
+        google_ip_address = data.get('google_ip_address', tunnel_url)
+except FileNotFoundError:
+    print("Could not find IP address")
+    google_ip_address = tunnel_url
+except ImportError:
+    pass
 
 # Attach the signal handler to the SIGINT signal (Ctrl+C)
 signal.signal(signal.SIGINT, signal_handler)
@@ -313,11 +330,11 @@ else:
     if process.poll() is None:
         print(f"[{params['branding']}Startup] \033[92mTTS Subprocess         :\033[93m Starting up\033[0m")
         print(f"[{params['branding']}Startup]")
-        print(
-            f"[{params['branding']}Startup] \033[94m{params['branding']}Settings & Documentation:\033[00m",
-            f"\033[92mhttp://localhost:{params['port_number']}\033[00m",
-        )
+        print(f"[{params['branding']}Startup] \033[94m{params['branding']}Settings & Documentation:\033[00m",f"\033[92mhttp://localhost:{params['port_number']}\033[00m")
         print(f"[{params['branding']}Startup]")
+        if running_on_google_colab:
+            print(f"[{params['branding']}Startup] \033[94m{params['branding']}Google Colab Address:\033[00m",f"\033[92m{google_ip_address}\033[00m")
+            print(f"[{params['branding']}Startup]")
     else:
         print(f"[{params['branding']}Startup] \033[91mWarning\033[0m TTS Subprocess Webserver failing to start process")
         print(f"[{params['branding']}Startup] \033[91mWarning\033[0m It could be that you have something on port:",params["port_number"],)
