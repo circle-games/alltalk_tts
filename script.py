@@ -302,6 +302,7 @@ def signal_handler(sig, frame):
 #### Google Colab Detection ####
 ################################
 tunnel_url = None
+running_on_google_colab = False
 try:
     import google.colab
     running_on_google_colab = True
