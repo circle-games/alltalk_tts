@@ -295,15 +295,15 @@ Please read the note below about start-up times and also the note about ensuring
 
 Some extra voices for AllTalk are downloadable [here](https://drive.google.com/file/d/1bYdZdr3L69kmzUN3vSiqZmLRD7-A3M47/view?usp=drive_link) and [here](https://drive.google.com/file/d/1CPnx1rpkuKvVj5fGr9OiUJHZ_e8DfTzP/view)
 
-#### 🟩 Changing AllTalks IP address & Accessing AllTalk over your Network
+#### 🟩 Changing AllTalks IP address/port & Accessing AllTalk over your Network
 <details>
 	<summary>Click to expand</summary><br>
 	
-AllTalk is coded to start on 127.0.0.1, meaning that it will ONLY be accessable to the local computer it is running on. If you want to make AllTalk available to other systems on your network, you will need to change its IP address to match the IP address of your network card/computers current IP address. There are 2x ways to change the IP address:
-  1) Start AllTalk and within its web interface and you can edit the IP address on the "AllTalk Startup Settings".
-  2) You can edit the `confignew.json`file in a text editor and change `"ip_address": "127.0.0.1",` to the IP address of your choosing.
+AllTalk is coded to start on 0.0.0.0, meaning it will attach to **all** IP addresses on your computer. If your computer is on 192.168.1.200 then AllTalk will be available on 192.168.1.200:{port_number}. 
 
-So, for example, if your computer's network card was on IP address 192.168.0.20, you would change AllTalk's setting to 192.168.1.20 and then **restart** AllTalk. You will need to ensure your machine stays on this IP address each time it is restarted, by setting your machine to have a static IP address.
+The standard port is 7851, but can be changed in the settings page and will take effect on the next restart. 
+
+If you wish to restrict access over your network, please use your firewall to do so.
 
 </details>
 
